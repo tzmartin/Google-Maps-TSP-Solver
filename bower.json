@@ -1,0 +1,27 @@
+{
+  "name": "Google-Maps-TSP-Solver",
+  "version": "1.1.0",
+  "homepage": "https://github.com/TechNaturally/Google-Maps-TSP-Solver",
+  "authors": [
+    "James Tolley <info [at] gmaptools.com>",
+    "Geir K. Engdahl <geir.engdahl (at) gmail.com>"
+  ],
+  "description": "",
+  "main": ["tsp.js", "BpTspSolver.js"],
+  "moduleType": [],
+  "keywords": [
+    "google",
+    "maps",
+    "travelling",
+    "salesman",
+    "problem"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
