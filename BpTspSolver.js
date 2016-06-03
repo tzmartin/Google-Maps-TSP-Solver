@@ -74,6 +74,8 @@
   var onProgressCallback = null;
   var originalOnFatalErrorCallback = function(tsp, errMsg) { alert("Request failed: " + errMsg); }
   var onFatalErrorCallback = originalOnFatalErrorCallback;
+  var originalOnErrorCallback = function(tsp, errMsg, errCode) { alert("Request failed: " + errMsg); }
+  var onErrorCallback = originalOnErrorCallback;
   var doNotContinue = false;
   var onLoadListener = null;
   var onFatalErrorListener = null;
@@ -605,7 +607,9 @@
 
     // Roundtrip
     if (numActive > maxTspSize) {
-      alert("Too many locations! You have " + numActive + ", but max limit is " + maxTspSize);
+      if (typeof onErrorCallback == 'function') {
+        onErrorCallback(tsp, "Too many locations! You have " + numActive + ", but max limit is " + maxTspSize, directionsStatus);
+      }
     } else {
       legsTmp = new Array();
       distances = new Array();
@@ -674,7 +678,9 @@
 		 	  } else {
 			    var errorMsg = DIR_STATUS_MSG[directionsStatus];
 			    var doNotContinue = true;
-			    alert("Request failed: " + errorMsg);
+			    if (typeof onErrorCallback == 'function') {
+			      onErrorCallback(tsp, errorMsg, directionsStatus);
+			    }
 			  }
 			});
     } else {
@@ -853,7 +859,9 @@
 			  setTimeout(function(){ addAddress(address, label, callback) }, 100); 
 			} else {
 			  --addressRequests;
-			  alert("Failed to geocode address: " + address + ". Reason: " + GEO_STATUS_MSG[status]);
+			  if (typeof onErrorCallback == 'function') {
+			    onErrorCallback(tsp, "Failed to geocode address: " + address + ". Reason: " + GEO_STATUS_MSG[status], tsp.Status.GEOCODE_FAILED);
+			  }
 			  ++currQueueNum;
 			  addressProcessing = false;
 			  if (typeof(callback) == 'function')
@@ -928,9 +936,11 @@
   /* end (edited) OptiMap code */
   /* start public interface */
 
-  function BpTspSolver(map, panel, onFatalError) {
+  function BpTspSolver(map, panel, onFatalError, onError) {
     if (tsp) {
-      alert('You can only create one BpTspSolver at a time.');
+      if (typeof onErrorCallback == 'function') {
+        onErrorCallback(tsp, "You can only create one BpTspSolver at a time.", tsp.Status.ONLY_ONE);
+      }
       return;
     }
 
@@ -939,8 +949,14 @@
     gebGeocoder          = new google.maps.Geocoder();
     gebDirectionsService = new google.maps.DirectionsService();
     onFatalErrorCallback = onFatalError; // only for fatal errors, not geocoding errors
+    onErrorCallback      = onError; // for geocoding errors
     tsp                  = this;
   }
+
+  BpTspSolver.prototype.Status = {
+    ONLY_ONE:       'ONLY_ONE',
+    GEOCODE_FAILED: 'GEOCODE_FAILED'
+  };
 
   BpTspSolver.prototype.addAddressWithLabel = function(address, label, callback) {
     ++addressRequests;
@@ -1116,7 +1132,6 @@
 
   BpTspSolver.prototype.solveRoundTrip = function(callback) {
     if (doNotContinue) {
-      alert('Cannot continue after fatal errors.');
       return;
     }
 
@@ -1132,7 +1147,6 @@
 
   BpTspSolver.prototype.solveAtoZ = function(callback) {
     if (doNotContinue) {
-      alert('Cannot continue after fatal errors.');
       return;
     }
 
